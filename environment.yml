@@ -1,0 +1,40 @@
+name: dataQuality
+channels:
+  - conda-forge
+dependencies:
+# Python
+  - python = 3.11
+
+# data management
+  - numpy
+  - pandas
+  - pyarrow
+  - matplotlib
+
+# DataBase connectivity
+  - sqlalchemy
+  - pyodbc
+  - pymssql
+
+# Excel / reports
+  - openpyxl
+  - xlsxwriter
+
+# Date and utilities
+  - python-dateutil
+  - pytz
+
+# login and config
+  - python-dotenv
+
+# Jupyter
+  - jupyter
+  - notebook
+  - ipykernel
+
+# environment utilities
+  - pip
+
+# Package installed with pip
+  - pip:
+    - requests

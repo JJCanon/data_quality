@@ -1,0 +1,297 @@
+# ==========================================================
+# General pipeline configuration
+# ==========================================================
+
+pipeline:
+  name: data_quality_elt
+  version: "1.0.0"
+  environment: "development"
+
+# ==========================================================
+# Entity being evaluated
+# ==========================================================
+
+
+# ==========================================================
+# Extract configuration
+# ==========================================================
+
+## sql files
+TABLES:
+  mpersona: mpersona.sql
+  mpersona_sarlaft: mpersona_sarlaft.sql
+  mpersona_telef: mpersona_telef.sql
+  mpersona_dir: mpersona_dir.sql
+  ttipo_doc: ttipo_doc.sql
+  tpais: tpais.sql
+  tdpto: tdpto.sql
+  tmunicipio: tmunicipio.sql
+  test_civil: test_civil.sql
+  ttipo_telef: ttipo_telef.sql
+
+# ==========================================================
+# Load configuration
+# ==========================================================
+
+
+# ==========================================================
+# Transform configuration
+# ==========================================================
+
+transform:
+
+  tables:
+
+    mpersona:
+      fields:
+
+        id_persona:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_nombre:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez]
+
+        txt_apellido1:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez]
+
+        txt_apellido2:
+          tipo_validez: Alfabético
+          dimensiones: [validez]
+
+        cod_tipo_doc:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: ttipo_doc
+
+        nro_doc:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        nro_nit:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        fec_exp_cedula:
+          tipo_validez: Fecha (DateTime)
+          dimensiones: [validez]
+
+        fec_nac:
+          tipo_validez: Fecha (DateTime)
+          dimensiones: [completitud, validez]
+
+        txt_sexo:
+          tipo_validez: Alfabético
+          dimensiones: [validez]
+
+        txt_lugar_nac:
+          tipo_validez: Alfabético
+          dimensiones: [validez]
+
+        cod_pais_nac:
+          tipo_validez: Numérico
+          dimensiones: [validez, consistencia]
+          consistencia: tpais
+
+
+        cod_dpto_nac:
+          tipo_validez: Numérico
+          dimensiones: [validez, consistencia]
+          consistencia: tdpto
+
+        cod_municipio_nac:
+          tipo_validez: Numérico
+          dimensiones: [validez, consistencia]
+          consistencia: tmunicipio
+
+        cod_est_civil:
+          tipo_validez: Numérico
+          dimensiones: [validez, consistencia]
+          consistencia: test_civil
+
+    ttipo_doc:
+      fields:
+
+        cod_tipo_doc:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_desc_redu:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez, unicidad]
+
+    tdpto:
+      fields:
+
+        cod_pais:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tpais 
+
+        cod_dpto:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez]
+
+    tmunicipio:
+      fields:
+
+        cod_pais:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tpais
+
+        cod_dpto:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tdpto
+
+        cod_municipio:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez]
+
+    tpais:
+      fields:
+
+        cod_pais:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez, unicidad]
+
+    test_civil:
+      fields:
+
+        cod_est_civil:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez, unicidad]
+
+    mpersona_telef:
+      fields:
+
+        id_persona:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: mpersona
+
+        cod_tipo_telef:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: ttipo_telef
+
+        txt_telefono:
+          tipo_validez: Contacto
+          dimensiones: [completitud, validez, unicidad]
+
+    ttipo_telef:
+      fields:
+
+        cod_tipo_telef:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad]
+
+        txt_desc:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez, unicidad]
+
+    mpersona_dir:
+      fields:
+
+        id_persona:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: mpersona
+
+        cod_tipo_dir:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        txt_direccion:
+          tipo_validez: Alfanumérico
+          dimensiones: [completitud, validez]
+
+        cod_pais:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tpais
+
+        cod_dpto:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tdpto
+
+        cod_municipio:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, consistencia]
+          consistencia: tmunicipio
+
+    # ttipo_dir:
+    #   fields:
+
+    #     cod_tipo_dir:
+    #       tipo_validez: Numérico
+    #       dimensiones: [completitud, validez, unicidad]
+
+    #     txt_desc:
+    #       tipo_validez: Alfabético
+    #       dimensiones: [completitud, validez, unicidad]
+
+    mpersona_sarlaft:
+      fields:
+
+        id_persona:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez, unicidad, consistencia]
+          consistencia: mpersona
+
+        cod_ciiu:
+          tipo_validez: Numérico
+          dimensiones: [validez]
+
+        desc_cargo:
+          tipo_validez: Alfabético
+          dimensiones: [completitud, validez]
+
+        imp_ingreso:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        imp_egreso:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        imp_otr_ingreso:
+          tipo_validez: Numérico
+          dimensiones: [validez]
+
+        desc_otr_ingreso:
+          tipo_validez: Alfabético
+          dimensiones: [validez]
+
+        imp_activo:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
+        imp_pasivo:
+          tipo_validez: Numérico
+          dimensiones: [completitud, validez]
+
