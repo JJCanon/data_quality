@@ -207,7 +207,6 @@ marimo/_lsp/
 __marimo__/
 
 config/__pycache__/__init__.cpython-311.pyc
-transform/calculate_metrics.py
 config/__pycache__/db_connections.cpython-311.pyc
 config/__pycache__/load_config.cpython-311.pyc
 .gitignore
