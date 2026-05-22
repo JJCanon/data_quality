@@ -227,3 +227,4 @@ extract/__pycache__/extract_table.cpython-311.pyc
 config/.env
 
 .vscode
+data_quality_report.xlsx

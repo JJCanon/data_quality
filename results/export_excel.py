@@ -5,7 +5,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
 # Function
-def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data_quality_report.xlsx"):
+def export_to_excel(data:pd.DataFrame,data_quality:float = None, file_path: str = "data_quality_report.xlsx"):
 
     # Normalizar entrada
     if not isinstance(data, pd.DataFrame):
@@ -79,27 +79,63 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
     # ──────────────────────────────────────────────
     score_fill = PatternFill("solid", start_color="1F3864")  # azul oscuro
 
-    c_label = ws.cell(row=1, column=1, value="Data Quality Score")
+    UMBRAL_DAMA = 85
+
+    df["punto_dama"] = (df["score"] > UMBRAL_DAMA).astype(int)
+
+    puntos_obtenidos = int(df["punto_dama"].sum())
+    puntos_posibles = int(len(df))
+    score_dama = round((puntos_obtenidos / puntos_posibles) * 100, 2) if puntos_posibles > 0 else 0
+
+    # Fila 1: Score oficial
+    c_label = ws.cell(row=1, column=1, value="Calificación DAMA oficial")
+    c_value = ws.cell(row=1, column=2, value=score_dama)
+
     c_label.font      = Font(bold=True, color="FFFFFF", name="Arial", size=13)
     c_label.fill      = score_fill
     c_label.alignment = center
     c_label.border    = border
 
-    c_value = ws.cell(row=1, column=2, value=round(float(data_quality), 2))
     c_value.font          = Font(bold=True, color="FFFFFF", name="Arial", size=13)
     c_value.fill          = score_fill
     c_value.alignment     = center
     c_value.border        = border
     c_value.number_format = '0.00"%"'
 
+    # Fila 2: Fórmula
+    style_data(ws.cell(row=2, column=1), "Fórmula", bold=True)
+    style_data(
+        ws.cell(row=2, column=2),
+        f"{puntos_obtenidos} puntos obtenidos / {puntos_posibles} puntos posibles"
+    )
+
+    # Fila 3: Umbral
+    style_data(ws.cell(row=3, column=1), "Umbral de cumplimiento", bold=True)
+    style_data(ws.cell(row=3, column=2), f"> {UMBRAL_DAMA}%")
+
+    # Fila 5: Nota metodológica
+    ws.merge_cells(start_row=5, start_column=1, end_row=5, end_column=len(existing_dims) + 2)
+
+    nota = ws.cell(row=5, column=1)
+    nota.value = (
+        "Nota: La calificación oficial se calcula bajo el marco DAMA. "
+        "Cada campo evaluado en cada dimensión obtiene 1 punto si supera el 85%. "
+        "Los promedios mostrados en las tablas son referenciales y no representan la calificación oficial."
+    )
+    nota.font = Font(italic=True, name="Arial", size=10)
+    nota.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    nota.border = border
+
+    ws.row_dimensions[5].height = 35
+
     # ──────────────────────────────────────────────
     # TABLA 1: Detalle por Campo
     # ──────────────────────────────────────────────
-    write_section_title(ws, 3, "Detalle por Campo")
+    write_section_title(ws, 7, "Detalle por Campo")
 
     t1_headers = ["Campo", "Tabla"] + dims_display
     for col_idx, h in enumerate(t1_headers, start=1):
-        style_header(ws.cell(row=4, column=col_idx), h)
+        style_header(ws.cell(row=8, column=col_idx), h)
 
     # Pivotear df para cruzar campo/tabla vs dimensión
     pivot_df = df.pivot_table(
@@ -110,13 +146,16 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
     ).reset_index()
 
     for i, (_, row) in enumerate(pivot_df.iterrows()):
-        excel_row = 5 + i
+        excel_row = 9 + i
         style_data(ws.cell(excel_row, 1), row["campo"])
         style_data(ws.cell(excel_row, 2), row["tabla"])
         for col_idx, dim in enumerate(existing_dims, start=3):
             val = row.get(dim)
-            style_data(ws.cell(excel_row, col_idx), round(val, 2) if pd.notna(val) else "-", pct=pd.notna(val))
-
+            style_data(
+                ws.cell(excel_row, col_idx),
+                round(val, 2) if pd.notna(val) else "-",
+                pct=pd.notna(val)
+            )
     # ──────────────────────────────────────────────
     # TABLA 2: Resumen por Tabla
     # ──────────────────────────────────────────────
@@ -129,9 +168,9 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
     )
 
     t2_start = ws.max_row + 3
-    write_section_title(ws, t2_start - 1, "Resumen por Tabla")
+    write_section_title(ws, t2_start - 1, "Resumen descriptivo por Tabla")
 
-    for col_idx, h in enumerate(["Tabla"] + dims_display + ["Promedio General"], start=1):
+    for col_idx, h in enumerate(["Tabla"] + dims_display + ["Promedio aritmético referencial"], start=1):
         style_header(ws.cell(t2_start, col_idx), h)
 
     for i, (_, row) in enumerate(pivot_tabla.iterrows()):
@@ -149,7 +188,7 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
 
     # Footer promedios
     footer_t2 = t2_start + 1 + len(pivot_tabla)
-    style_data(ws.cell(footer_t2, 1), "Promedio", bold=True)
+    style_data(ws.cell(footer_t2, 1), "Promedio aritmético referencial", bold=True)
     all_avgs = []
     for col_idx, dim in enumerate(existing_dims, start=2):
         col_vals = pivot_tabla[dim].dropna().tolist()
@@ -170,9 +209,9 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
     )
 
     t3_start = ws.max_row + 3
-    write_section_title(ws, t3_start - 1, "Resumen por Dimensión")
+    write_section_title(ws, t3_start - 1, "Resumen descriptivo por Dimensión")
 
-    for col_idx, h in enumerate(["Dimensión", "Promedio (%)"], start=1):
+    for col_idx, h in enumerate(["Dimensión", "Promedio aritmético (%)"], start=1):
         style_header(ws.cell(t3_start, col_idx), h)
 
     for i, (dim, avg) in enumerate(dim_avgs.items(), start=1):
@@ -180,9 +219,13 @@ def export_to_excel(data:pd.DataFrame,data_quality:float, file_path: str = "data
         style_data(ws.cell(t3_start + i, 2), round(avg, 2), pct=True)
 
     footer_t3 = t3_start + len(dim_avgs) + 1
-    style_data(ws.cell(footer_t3, 1), "Promedio General", bold=True)
+    style_data(ws.cell(footer_t3, 1), "Promedio aritmético referencial", bold=True)
     style_data(ws.cell(footer_t3, 2), round(dim_avgs.mean(), 2), pct=True, bold=True)
 
     autofit(ws)
+
+    # Ancho fijo para columna A
+    ws.column_dimensions["A"].width = 41
+
     wb.save(file_path)
     print(f"\nExcel report generated: {file_path}") 
